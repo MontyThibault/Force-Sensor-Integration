@@ -1,0 +1,18 @@
+﻿Build started 2016-05-05 16:20:26.
+     1>Project "C:\Users\Monty\Desktop\forcePlates\JavaDLL\DLL\DLL.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _WINDOWS /D _USRDLL /D DLL_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt java_export.cpp
+         java_export.cpp
+     1>c:\users\monty\desktop\forceplates\javadll\dll\java_export.cpp(96): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+         c:\program files (x86)\windows kits\10\include\10.0.10150.0\ucrt\string.h(119): note: see declaration of 'strcpy'
+     1>c:\users\monty\desktop\forceplates\javadll\dll\java_export.cpp(167): warning C4244: 'argument': conversion from 'double' to 'const float', possible loss of data
+     1>c:\users\monty\desktop\forceplates\javadll\dll\java_export.cpp(194): warning C4715: 'Java_forcePates_ForcePlates_getForces': not all control paths return a value
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.dll" /INCREMENTAL /NOLOGO /LIBPATH:"C:\local\boost_1_60_0\lib64-msvc-14.0" /LIBPATH:C:\local\boost_1_60_0\ LabProUSB.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.lib" /MACHINE:X64 /DLL x64\Debug\java_export.obj
+            Creating library C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.lib and object C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.exp
+         DLL.vcxproj -> C:\Users\Monty\Desktop\forcePlates\x64\Debug\JavaDLL.dll
+     1>Done Building Project "C:\Users\Monty\Desktop\forcePlates\JavaDLL\DLL\DLL.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.48

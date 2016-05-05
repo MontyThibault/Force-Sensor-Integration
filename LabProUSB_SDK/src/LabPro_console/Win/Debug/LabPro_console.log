@@ -1,0 +1,13 @@
+﻿Build started 2016-05-02 15:58:30.
+     1>Project "C:\Users\Monty\Desktop\forcePlates\jni\LabProUSB_SDK\src\LabPro_console\Win\LabPro_console.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\..\..\redist\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _VC80_UPGRADE=0x0600 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp".\Debug/LabPro_console.pch" /Fo".\Debug/" /Fd".\Debug/vc140.pdb" /FR".\Debug\\" /Gd /TP /analyze- /errorReport:prompt StdAfx.cpp
+         StdAfx.cpp
+     1>c:\program files (x86)\microsoft visual studio 14.0\vc\atlmfc\include\afx.h(38): warning C4996: 'MBCS_Support_Deprecated_In_MFC': MBCS support in MFC is deprecated and may be removed in a future version of MFC.
+         c:\program files (x86)\microsoft visual studio 14.0\vc\atlmfc\include\afx.h(33): note: see declaration of 'MBCS_Support_Deprecated_In_MFC'
+     1>c:\program files (x86)\microsoft visual studio 14.0\vc\atlmfc\include\afxv_w32.h(40): fatal error C1189: #error:  MFC does not support WINVER less than 0x0501.  Please change the definition of WINVER in your project properties or precompiled header.
+     1>Done Building Project "C:\Users\Monty\Desktop\forcePlates\jni\LabProUSB_SDK\src\LabPro_console\Win\LabPro_console.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.03
