@@ -32,6 +32,8 @@ BOOL APIENTRY PythonDLL(HMODULE hModule,
 bool sendString(char *string) {
 	short length = strlen(string);
 
+	std::cout << string << std::endl;
+
 	if (LabProUSB_WriteBytes(&length, string) != 0)
 		return false;
 	return true;
@@ -39,7 +41,7 @@ bool sendString(char *string) {
 
 char* getBytes() {
 	char *buffer;
-	int numBytes = LabProUSB_GetAvailableBytes();
+	gtype_int32 numBytes = LabProUSB_GetAvailableBytes();
 
 	if (numBytes > 0) {
 		buffer = (char*) malloc(numBytes + 1);
@@ -52,6 +54,7 @@ char* getBytes() {
 			return buffer;
 
 		} else {
+			std::cout << "LabProUSB_ReadBytes failed." << std::endl;
 
 			free(buffer);
 			return NULL;
@@ -61,10 +64,11 @@ char* getBytes() {
 		free(buffer);
 	}
 
+	std::cout << "Num bytes = 0" << std::endl;
 	return NULL;
 }
 
-bool openDevice () {
+bool openDevice() {
 	if (LabProUSB_Open() == -1) {
 		return false;
 	}
@@ -85,12 +89,13 @@ void closeDevice() {
 }
 
 bool getForces(float outputArray[]) {
-	// std::vector<float> answers{};
-
 	try {
 		char *buffer = getBytes();
-		if (buffer == NULL)
+		if (buffer == NULL) {
+			std::cout << "[forcePlateJNI]: Null buffer!" << std::endl;
 			return false;
+		}
+
 		//std::cout<<"Matching: "<<buffer<<std::endl;
 		boost::regex regEx("\\s*\\{\\s*(.*?),\\s*(.*?),\\s*(.*?),\\s*(.*?),\\s*(.*?)\\s*\\}\\s*");
 		boost::regex sciRegEx("^(.*)?E(.*)$");
@@ -129,7 +134,7 @@ bool getForces(float outputArray[]) {
 	} catch (boost::bad_lexical_cast &e) {
 		std::cout << "[forcePlateJNI]: lexical cast exception: " << e.what() << std::endl;
 	} catch (std::runtime_error &e) {
-		std::cout << e.what() << std::endl;
+		std::cout << "[forcePlateJNI]: " << e.what() << std::endl;
 	} catch (...) {
 		std::cout << "[forcePlateJNI]: Caught an -UNKNOWN- exception" << std::endl;
 		return false;

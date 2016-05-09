@@ -1,4 +1,4 @@
-from ctypes import *
+﻿from ctypes import *
 force_plates = cdll.LoadLibrary('../../x64/Debug/PythonDLL.dll')
 
 class Singleton(object):
@@ -17,40 +17,54 @@ class ForcePlates(Singleton):
     def forces(self):
         return [self._forces[i] for (i, _) in enumerate(self._forces)]
 
-    def openDevice(self):
-        return force_plates.openDevice()
+    def openDevice(self, **kwargs):
+        if "surpress_error" in kwargs:
+            return force_plates.openDevice()
+        elif not force_plates.openDevice() == 1:
+            print("Error opening device")
 
     def closeDevice(self):
         return force_plates.closeDevice()
 
-    def sendString(self, str):
-        return force_plates.sendString(str)
+    def sendString(self, str, **kwargs):
+
+        # Convert from Python 3 string to byte array
+        # Python 2 reads simply c_char_p(str)
+        ctype_str = c_char_p(str.encode("ascii"))
+
+        if "surpress_error" in kwargs:
+            return force_plates.sendString(ctype_str)
+        elif not force_plates.sendString(ctype_str) == 1:
+            print("Error sending string")
 
     def getBytes(self):
         return force_plates.getBytes()
             
-    def getForces(self):
-        return force_plates.getForces(self._forces)
+    def getForces(self, **kwargs):
+        if "surpess_error" in kwargs:
+            return force_plates.getForces(self._forces)
+        elif not force_plates.getForces(self._forces) == 1:
+            print("Error getting forces")
 
 
 def main():
     sensor = ForcePlates()
 
     sensor.openDevice()
+
     program(sensor)
 
-def program(controller):
-    controller.sendString("s{1, 1, 14, 0, 0, 1}\n")
-    controller.sendString("s{4, 1, 1, 1, -2.24810E+02, 2.24810E+02}\n")
-    controller.sendString("s{1, 1, 14, 0, 0, 1}\n")
-    controller.sendString("s{4, 1, 1, 1, -2.24810E+02, 2.24810E+02}\n")
-    controller.sendString("s{1, 1, 14, 0, 0, 1}\n")
-    controller.sendString("s{4, 1, 1, 1, -2.24810E+02, 2.24810E+02}\n")
-    controller.sendString("s{1, 1, 14, 0, 0, 1}\n")
-    controller.sendString("s{4, 1, 1, 1, -2.24810E+02, 2.24810E+02}\n")
-    controller.sendString("s{3, 0.5, -1, 0, 0, 0, 0, 0, 0, 0, 0}\n")
-    controller.sendString("s{7}\n")
+    from time import sleep
+    while True:
+        sleep(1.0 / 60.0)
 
+        sensor.getForces()
+        print(sensor.forces)
+
+def program(sensor):
+    file = open('programs/simple_program.txt', 'r')
+    for line in file.readlines():
+        sensor.sendString("s{%s}\n" % line.strip('\n'))
 
 if __name__ == "__main__":
     main()

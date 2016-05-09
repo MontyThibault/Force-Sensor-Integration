@@ -30,16 +30,14 @@ BOOL APIENTRY JavaDLL( HMODULE hModule,
 	return TRUE;
 }
 
-bool sendString(char *data)
-{
-	short len = (short)strlen(data);
+bool sendString(char *data) {
+	short len = (size_t) strlen(data);
 	if (LabProUSB_WriteBytes(&len, data) != 0)
 		return false;
 	return true;
 }
 
-char* getBytes()
-{
+char* getBytes() {
 	char *buffer;
 	gtype_int32 numBytes = LabProUSB_GetAvailableBytes();
 	if (numBytes>0)

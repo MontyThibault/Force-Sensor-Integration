@@ -50,7 +50,7 @@ public class forceTest {
             System.out.println("Couldn't send a string!");
         if(!plates.sendString("s{4, 4, 1, 1, -2.24810E+02, 2.24810E+02}\n"))
             System.out.println("Couldn't send a string!");
-        if(!plates.sendString("s{3, 0.5, -1, 0, 0, 0, 0, 0, 0, 0, 0}\n"))
+        if(!plates.sendString("s{3, 0.05, -1, 0, 0, 0, 0, 0, 0, 0, 0}\n"))
             System.out.println("Couldn't send a string!");
         if(!plates.sendString("s{7}\n"))
             System.out.println("Couldn't send a string!");
@@ -58,17 +58,17 @@ public class forceTest {
         
         System.out.println(plates.getBytes());
         float forceData[] = new float[4];
-        DataInputStream dis = new DataInputStream(System.in) ;
+        // DataInputStream dis = new DataInputStream(System.in) ;
 
         try {
-            while(dis.available() == 0) {
-                Thread.sleep(500);
+            while(true) {
+                Thread.sleep(50);
                 
-                plates.update();
-                System.out.println(plates);
+                // plates.update();
+                System.out.println(plates.getBytes());
             }
-        } catch(IOException excep) {
-            System.out.println("Caught an exception (IO)");
+//        } catch(IOException excep) {
+//            System.out.println("Caught an exception (IO)");
         } catch(java.lang.InterruptedException excep) {
             System.out.println("Caught an exception (InterruptedException)");
         }
