@@ -16,10 +16,8 @@ Problems:
 Missing dependency errors: Try to remove the LabProUSB.lib dependency from the VC project.
 If so, that's the problem. (See LabProSDK readme) If not, create a new project from scratch.
 
-
 ### Python
 More simple; conversion to and from C_types are done from within the python module.
 
-
 ### Maya plugin
-Builds to .mll which can be linked to Maya. I have provided a python script that links the plugin unloading/loading to the build process.
+The plugin is the MayaPlugin.py script that can be found in the MayaIntegration folder. This script spawns a Python thread that runs inside of Maya and updates the sensors however many times per second. Automated testing is done by binding the MayaReload.py script to a shelf button within Maya.
