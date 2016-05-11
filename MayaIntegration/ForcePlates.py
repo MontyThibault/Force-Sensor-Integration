@@ -1,5 +1,6 @@
 ﻿from ctypes import *
-force_plates = cdll.LoadLibrary('../x64/Debug/PythonDLL.dll')
+
+force_plates = cdll.LoadLibrary('C:/Users/Monty/Desktop/forcePlates/x64/Debug/PythonDLL.dll')
 
 class Singleton(object):
     """Ensures only one instance of subtypes exist at a time."""
@@ -62,7 +63,7 @@ def main():
         print(sensor.forces)
 
 def program(sensor):
-    file = open('programs/simple_program.txt', 'r')
+    file = open('C:/Users/Monty/Desktop/forcePlates/MayaIntegration/programs/simple_program.txt', 'r')
     for line in file.readlines():
         sensor.sendString("s{%s}\n" % line.strip('\n'))
 

@@ -37,6 +37,7 @@ def psource(module):
     return modname
 
 # When you import a file you must give it the full path
+psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/ForcePlates.py' )
 psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/MayaScript.py' )
 
-MayaScript.main()
+MayaScript.main(ForcePlates)
