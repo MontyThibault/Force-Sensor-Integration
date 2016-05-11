@@ -49,8 +49,6 @@ char* getBytes() {
 
 		int requested = numBytes;
 		if (LabProUSB_ReadBytes(&requested, buffer) == 0) {
-
-			//printf("Returning: '%s'\n", buffer);
 			return buffer;
 
 		} else {
@@ -137,8 +135,9 @@ bool getForces(float outputArray[]) {
 		std::cout << "[forcePlateJNI]: " << e.what() << std::endl;
 	} catch (...) {
 		std::cout << "[forcePlateJNI]: Caught an -UNKNOWN- exception" << std::endl;
-		return false;
 	}
+
+	return false;
 }
 
 #ifdef _MANAGED

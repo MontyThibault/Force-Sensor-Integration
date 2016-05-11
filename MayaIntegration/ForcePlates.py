@@ -1,4 +1,5 @@
 ﻿from ctypes import *
+import time
 
 force_plates = cdll.LoadLibrary('C:/Users/Monty/Desktop/forcePlates/x64/Debug/PythonDLL.dll')
 
@@ -13,10 +14,16 @@ class Singleton(object):
 
 class ForcePlates(Singleton):
     _forces = (c_float * 4)()
+    
+    _offset = [0, 0, 0, 0]
+    _normalization = [1, 1, 1, 1]
 
     @property
     def forces(self):
-        return [self._forces[i] for (i, _) in enumerate(self._forces)]
+        """ Converts from a c_types float array to a native Python number array and applies 
+       calibration. """
+        return [(self._forces[i] + self._offset[i]) * self._normalization[i]
+                for (i, _) in enumerate(self._forces)]
 
     def openDevice(self, **kwargs):
         if "surpress_error" in kwargs:
@@ -28,6 +35,8 @@ class ForcePlates(Singleton):
         return force_plates.closeDevice()
 
     def sendString(self, str, **kwargs):
+        """ Sends a program line-by-line to the LabPro. Thre instruction manual has more 
+        information for the specification of such programs. """
 
         # Convert from Python 3 string to byte array
         # Python 2 reads simply c_char_p(str)
@@ -45,9 +54,22 @@ class ForcePlates(Singleton):
         if "surpess_error" in kwargs:
             return force_plates.getForces(self._forces)
         elif not force_plates.getForces(self._forces) == 1:
-            print("Error getting forces")
+            print("Error getting forces %s" % time.time())
+
+    def setZero(self):
+        """ Sets the "_offset" component of the calibration. """
+
+        for (i, _) in enumerate(self._forces):
+            self._offset[i] = -self._forces[i]
+
+    def setOne(self, i):
+        """ Sets the "_normalization" component of the calibration for plate `i`, such that
+        the current force measurement is scaled to the value `1.0`. """
+
+        self._normalization[i] = 1.0 / self._forces[i]
 
 
+# Example
 def main():
     sensor = ForcePlates()
 
@@ -55,9 +77,8 @@ def main():
 
     program(sensor)
 
-    from time import sleep
     while True:
-        sleep(1.0 / 60.0)
+        time.sleep(1.0 / 60.0)
 
         sensor.getForces()
         print(sensor.forces)
