@@ -28,16 +28,16 @@ def psource(module):
     # exec works like MEL's eval but you need to add in globals()
     # at the end to make sure the file is imported into the global
     # namespace else it will only be in the scope of this function
-    exec ('import ' + modname) in globals()
+    exec ('import ' + modname) # in globals()
 
     # reload the file to make sure its up to date
-    exec( 'reload( ' + modname + ' )' ) in globals()
+    exec( 'reload( ' + modname + ' )' ) # in globals()
 
     # This returns the namespace of the file imported
     return modname
 
 # When you import a file you must give it the full path
-psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/ForcePlates.py' )
-psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/MayaScript.py' )
+ForcePlates = psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/ForcePlates.py' )
+MayaScript = psource( 'C:/Users/Monty/Desktop/forcePlates/MayaIntegration/MayaScript.py' )
 
 MayaScript.main(ForcePlates)

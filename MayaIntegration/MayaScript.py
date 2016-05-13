@@ -1,17 +1,23 @@
 import maya.cmds as cmds
 import maya.utils
+import maya.OpenMaya
 
 import threading
 import time
 
-# ForcePlates.py module should be loaded in Maya along with this script (See MayaReload.py)
-# import ForcePlates
+import sys 
+import os
 
-def main(ForcePlates):
+sys.path.append('C:/Users/Monty/Desktop/forcePlates/MayaIntegration')
+import ForcePlates
+
+def main():
+	maya.utils.executeDeferred(init)
+
+def init():
+	""" Main entry point """
+	
 	print("MayaScript loaded at %s!" % time.time())
-
-	cmds.scriptJob(killAll = True)
-	cmds.scriptJob(tc = "MayaScript.updateLocator()")
 
 	if not cmds.objExists('plate1'):
 		cmds.createNode( "locator", name="plate1" )
@@ -26,29 +32,28 @@ def main(ForcePlates):
 	if not cmds.objExists('center'):
 		cmds.createNode( "locator", name="center" )
 
-	if 'plates' not in globals().keys():
-		plates = ForcePlates.ForcePlates()
-		plates.openDevice()
-		ForcePlates.program(plates)
+	plates = ForcePlates.ForcePlates()
+	plates.refresh()
 
-		globals()['plates'] = plates
+	SensorUpdate(plates).start()
 
-	SensorUpdate().start()
+def callable(f, *args, **kwargs):
+	""" Returns a function that will be called with the given *args and **kwargs. """
 
+	def g(*_args, **_kwargs):
+		f(*args, **kwargs)
 
-def updateLocator():
-	print("Time changed")
-	cmds.move(0, plates.forces[0], 0, "plate1", relative=True)
-
+	return g
 
 class SensorUpdate(threading.Thread):
-	def __init__(self):
+	def __init__(self, plates):
 		threading.Thread.__init__(self)
 		self.dead = False
 		self.modifiers = 0
 		self.available = True
 
-		self.plates = globals()['plates']
+		self.plates = plates
+		# self.plates = globals()['plates']
 
 		# Kill previous threat if script reloads
 		try:
@@ -58,20 +63,15 @@ class SensorUpdate(threading.Thread):
 
 		globals()['sensor_thread'] = self
 
+		print("Thread started")
+
 		self.initWindow()
 
 	def initWindow(self):
 		cmds.window("ForcePlates", width = 350)
 		cmds.columnLayout(adjustableColumn = True)
-	
-		def callable(f, *args, **kwargs):
-			""" Returns a function that will be called with the given *args and **kwargs. """
 
-			def g(*_args, **_kwargs):
-				f(*args, **kwargs)
-
-			return g
-
+		# The button command will add an extra argument that we don't want, hence the callable() wrapper
 		cmds.button(label = 'Kill Thread', command = callable(self.kill))
 		cmds.button(label = 'Set Zero', command = callable(self.plates.setZero))
 		cmds.button(label = 'Set One (1)', command = callable(self.plates.setOne, 0))
@@ -79,43 +79,62 @@ class SensorUpdate(threading.Thread):
 		cmds.button(label = 'Set One (3)', command = callable(self.plates.setOne, 2))
 		cmds.showWindow()
 
-		# Reopen window when closed (You need it to kill threads safely)
+		# Reopen window when closed (You need the button to kill threads safely)
 		self.reopen_id = cmds.scriptJob(uiDeleted = ["ForcePlates", self.initWindow])
 
 	def kill(self):
 		self.dead = True
 
-		cmds.scriptJob(kill = self.reopen_id, force = True)
+		if cmds.scriptJob(ex = self.reopen_id):
+			cmds.scriptJob(kill = self.reopen_id, force = True)
 		cmds.deleteUI("ForcePlates")
+
+		self.plates.closeDevice()
+
+		# Clear script editor console
+		# cmds.scriptEditorInfo(ch = True)
 
 		print("Thread killed")
 
 	def update(self):
+		self.plates.getForces()
+
+		print(self.plates.forces)
+
+		self.modifiers = cmds.getModifiers()
+		cmds.move(self.plates.forces[0] * 30, "plate1", y = True)
+		cmds.move(self.plates.forces[1] * 30, "plate2", y = True)
+		cmds.move(self.plates.forces[2] * 30, "plate3", y = True)
+
+		# Get translation vectors for plates
+		vecs = [(self.plates.forces[i], 
+				maya.OpenMaya.MVector(
+					*cmds.xform('locator%s' % (i + 1), ws = True, t = 1, q = 1)
+				)) for i in range(3)]
+				
+		# Barycentric interpolation between vectors
+		center = maya.OpenMaya.MVector(0, 0, 0)
+		totalWeight = 0
+
+		for (weight, vec) in vecs:
+			vec = vec * weight
+			center += vec
+			totalWeight += weight
+
+		center /= totalWeight
+		center.y = 0
+
+		cmds.move(center.x, center.y, center.z, 'center')
+		cmds.refresh()
+
+		self.available = True
+
+	def updateRequest(self):
 		""" Limit to only one request at a time in the event that Maya is busy. """
 
 		if self.available:
-
-			def request():
-
-				self.modifiers = cmds.getModifiers()
-				cmds.move(self.plates.forces[0] * 30, "plate1", y = True)
-				cmds.move(self.plates.forces[1] * 30, "plate2", y = True)
-				cmds.move(self.plates.forces[2] * 30, "plate3", y = True)
-
-				t1 = cmds.xform('plate1', t = 1, q = 1)
-				t2 = cmds.xform('plate2', t = 1, q = 1)
-				t3 = cmds.xform('plate3', t = 1, q = 1)
-				
-				#t1 * t1.y + t2 * t2.y + t3 * t3.y
-
-				cmds.xform('center', t = [1, 2, 3])
-
-				cmds.refresh()
-
-				self.available = True
-	
 			self.available = False
-			maya.utils.executeDeferred(request)
+			maya.utils.executeDeferred(self.update)
 		
 
 	def run(self):
@@ -123,7 +142,11 @@ class SensorUpdate(threading.Thread):
 
 			# This should coincide with the number of seconds delay for the
 			# program fed into the LabPro
-			time.sleep(1.0 / 20.0)
+			time.sleep(1.0 / 25.0)
 
-			self.plates.getForces()
-			self.update()
+			# maya.utils.executeDeferred(self.update)
+
+			self.updateRequest()
+
+if __name__ == '__main__':
+	main()
