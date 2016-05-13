@@ -1,0 +1,7 @@
+// Place in  <drive>:\Users\<username>\My Documents\maya\<Version>\scripts
+
+// Initialize command port for Visual Studio plugin integration
+// 8934 is arbitrary but must be linked to the Python script
+commandPort -n "localhost:8934";
+
+// TODO: Insert extra commands for Maya startup here!
