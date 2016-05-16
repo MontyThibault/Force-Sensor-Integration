@@ -111,10 +111,14 @@ class SensorUpdate(threading.Thread):
 		# The button command will add an extra argument that we don't want, hence the callWith() wrapper
 		cmds.button(label = 'Kill Thread', command = callWith(self.kill))
 
-		# cmds.button(label = 'Set Zero', command = callWith(self.plates.setZero))
-		# cmds.button(label = 'Set One (1)', command = callWith(self.plates.setOne, 0))
-		# cmds.button(label = 'Set One (2)', command = callWith(self.plates.setOne, 1))
-		# cmds.button(label = 'Set One (3)', command = callWith(self.plates.setOne, 2))
+		cmds.button(label = 'Set Zero', command = callWith(self.plates.setAllZero))
+		cmds.button(label = 'Set One (1)', command = callWith(self.plates.calibrations[0].setOne))
+		cmds.button(label = 'Set One (2)', command = callWith(self.plates.calibrations[1].setOne))
+		cmds.button(label = 'Set One (3)', command = callWith(self.plates.calibrations[2].setOne))
+
+		cmds.button(label = 'Blink', command = callWith(self.plates.blink))
+
+
 
 		cmds.button(label = 'Set Forces Zero', 
 			command = callWith(self.rock.setChannelsZero, [0, 1, 2]))
@@ -125,8 +129,7 @@ class SensorUpdate(threading.Thread):
 			command = callWith(self.rock.setChannelsOne, [0, 1, 2]))
 		cmds.button(label = 'Set Torques One', 
 			command = callWith(self.rock.setChannelsOne, [3, 4, 5]))
-
-		cmds.button(label = 'Blink', command = callWith(self.plates.blink))
+		
 		cmds.showWindow()
 
 		# Reopen window when closed (You need the button to kill threads safely)
@@ -139,48 +142,50 @@ class SensorUpdate(threading.Thread):
 			cmds.scriptJob(kill = self.reopen_id, force = True)
 		cmds.deleteUI("ForceSensors")
 
+		self.plates.blink()
 		self.plates.Close()
+		self.plates.save()
 		self.rock.save()
+
+		cmds.delete(self.rock.transform)
 
 		print("Thread killed")
 
 	def update(self):
 
-
-		# self.rock.updateMeasurements()
-		# self.rock.updateTransform()
-
+		self.rock.updateMeasurements()
+		self.rock.updateTransform()
 
 		self.plates.updateMeasurements()
 
 
-		# self.modifiers = cmds.getModifiers()
-		# cmds.move(self.plates.forces[0] * 30, "plate1", y = True)
-		# cmds.move(self.plates.forces[1] * 30, "plate2", y = True)
-		# cmds.move(self.plates.forces[2] * 30, "plate3", y = True)
+		self.modifiers = cmds.getModifiers()
+		cmds.move(self.plates.forces[0] * 30, "plate1", y = True)
+		cmds.move(self.plates.forces[1] * 30, "plate2", y = True)
+		cmds.move(self.plates.forces[2] * 30, "plate3", y = True)
 
-		# # Get translation vectors for plates
-		# vecs = [(self.plates.forces[i], 
-		# 		maya.OpenMaya.MVector(
-		# 			*cmds.xform('plate%s' % (i + 1), ws = True, t = 1, q = 1)
-		# 		)) for i in range(3)]
+		# Get translation vectors for plates
+		vecs = [(self.plates.forces[i], 
+				maya.OpenMaya.MVector(
+					*cmds.xform('plate%s' % (i + 1), ws = True, t = 1, q = 1)
+				)) for i in range(3)]
 				
-		# # Barycentric interpolation between vectors
-		# center = maya.OpenMaya.MVector(0, 0, 0)
-		# totalWeight = 0
+		# Barycentric interpolation between vectors
+		center = maya.OpenMaya.MVector(0, 0, 0)
+		totalWeight = 0
 
-		# for (weight, vec) in vecs:
-		# 	vec = vec * weight
-		# 	center += vec
-		# 	totalWeight += weight
+		for (weight, vec) in vecs:
+			vec = vec * weight
+			center += vec
+			totalWeight += weight
 
-		# center /= totalWeight
-		# center.y = 0
+		center /= totalWeight
+		center.y = 0
 
-		# cmds.move(center.x, center.y, center.z, 'center')
-		# cmds.refresh()
+		cmds.move(center.x, center.y, center.z, 'center')
+		cmds.refresh()
 
-		# print('that and this')
+
 
 		self.available = True
 
@@ -194,11 +199,7 @@ class SensorUpdate(threading.Thread):
 
 	def run(self):
 		while not self.dead:
-
-			# This should coincide with the number of seconds delay for the
-			# program fed into the LabPro
-			time.sleep(1.0 / 20.0)
-
+			time.sleep(1.0 / 60.0)
 			self.updateRequest()
 
 if __name__ == '__main__':
