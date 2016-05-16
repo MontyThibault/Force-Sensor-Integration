@@ -10,13 +10,11 @@ import os
 
 from ctypes import *
 
-import ForcePlates
 import LabPro
 import PAIO
 import SixAxis
 import Calibration
 
-reload(ForcePlates)
 reload(LabPro)
 reload(PAIO)
 reload(SixAxis)
@@ -59,7 +57,7 @@ def init():
 	aio = PAIO.AIO()
 
 	deviceA000.Init()
-	deviceA000.AioSetAiRangeAll(aio.PM10)
+	deviceA000.AioSetAiRangeAll(aio.PM1)
 
 	channels = [6, 7, 8, 9, 10, 11]
 	rock = SixAxis.SixAxis(deviceA000, channels, "rock1")
@@ -105,30 +103,42 @@ class SensorUpdate(threading.Thread):
 		if cmds.window("ForceSensors", exists = True):
 			cmds.deleteUI("ForceSensors")
 
-		cmds.window("ForceSensors", width = 350)
+		cmds.window("ForceSensors", width = 350, sizeable = False)
 		cmds.columnLayout(adjustableColumn = True)
 
 		# The button command will add an extra argument that we don't want, hence the callWith() wrapper
 		cmds.button(label = 'Kill Thread', command = callWith(self.kill))
+
+		cmds.text(label='LabPro Force Plates')
 
 		cmds.button(label = 'Set Zero', command = callWith(self.plates.setAllZero))
 		cmds.button(label = 'Set One (1)', command = callWith(self.plates.calibrations[0].setOne))
 		cmds.button(label = 'Set One (2)', command = callWith(self.plates.calibrations[1].setOne))
 		cmds.button(label = 'Set One (3)', command = callWith(self.plates.calibrations[2].setOne))
 
-		cmds.button(label = 'Blink', command = callWith(self.plates.blink))
+		cmds.button(label = 'Blink (kills program)', command = callWith(self.plates.blink))
 
 
+		cmds.text(label='Contec Six-Axis Sensors')
 
-		cmds.button(label = 'Set Forces Zero', 
+		cmds.rowColumnLayout(numberOfColumns = 2, columnWidth = [(1, 350 / 2), (2, 350 / 2)])
+
+		cmds.button(label = 'Set All Forces Zero', 
 			command = callWith(self.rock.setChannelsZero, [0, 1, 2]))
-		cmds.button(label = 'Set Torques Zero', 
-			command = callWith(self.rock.setChannelsZero, [3, 4, 5]))
-
-		cmds.button(label = 'Set Forces One', 
+		cmds.button(label = 'Set All Forces One', 
 			command = callWith(self.rock.setChannelsOne, [0, 1, 2]))
-		cmds.button(label = 'Set Torques One', 
+
+		cmds.button(label = 'Set All Torques Zero', 
+			command = callWith(self.rock.setChannelsZero, [3, 4, 5]))
+		cmds.button(label = 'Set All Torques One', 
 			command = callWith(self.rock.setChannelsOne, [3, 4, 5]))
+
+		for i, a in enumerate(['Force', 'Torque']):
+			for j, b in enumerate(['X', 'Y', 'Z']):
+				cmds.button(label = 'Set %s%s Zero' % (a, b), 
+					command = callWith(self.rock.setChannelsZero, [3 * i + j]))
+				cmds.button(label = 'Set %s%s One' % (a, b), 
+					command = callWith(self.rock.setChannelsOne, [3 * i + j]))
 		
 		cmds.showWindow()
 
@@ -153,16 +163,18 @@ class SensorUpdate(threading.Thread):
 
 	def update(self):
 
+		if self.dead:
+			return
+
 		self.rock.updateMeasurements()
 		self.rock.updateTransform()
 
 		self.plates.updateMeasurements()
 
 
-		self.modifiers = cmds.getModifiers()
-		cmds.move(self.plates.forces[0] * 30, "plate1", y = True)
-		cmds.move(self.plates.forces[1] * 30, "plate2", y = True)
-		cmds.move(self.plates.forces[2] * 30, "plate3", y = True)
+		cmds.xform("plate1", s = [self.plates.forces[0] * 18 for i in range(3)])
+		cmds.xform("plate2", s = [self.plates.forces[1] * 18 for i in range(3)])
+		cmds.xform("plate3", s = [self.plates.forces[2] * 18 for i in range(3)])
 
 		# Get translation vectors for plates
 		vecs = [(self.plates.forces[i], 
