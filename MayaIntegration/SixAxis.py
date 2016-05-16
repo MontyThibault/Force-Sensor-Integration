@@ -1,8 +1,6 @@
 from ctypes import *
 import maya.cmds as cmds
-import Calibration
-
-reload(Calibration)
+import Calibration as C
 
 class SixAxis(object):
 	def __init__(self, device, channels, name):
@@ -24,7 +22,7 @@ class SixAxis(object):
 			self.name = 'SixAxis_%s' % hash(self)
 
 		self.transform = cmds.createNode('transform', name = self.name)
-		self.calibrations = [Calibration.Calibration('%s_%s' % (self.name, i)) 
+		self.calibrations = [C.Calibration('%s_%s' % (self.name, i)) 
 			for i in range(6)]
 
 		print(self.name)
@@ -40,8 +38,8 @@ class SixAxis(object):
 	def torques(self):
 		""" Channels 4 - 6 """
 
-		return [self.calibrations[i].process((self.measurements[i + 3]))
-			for i in range(3)]
+		return [self.calibrations[i].process((self.measurements[i]))
+			for i in range(3, 6)]
 
 	def updateMeasurements(self):
 		""" Update sensor measurements. Wrap this in an executeDeferred(). """
@@ -79,6 +77,8 @@ class SixAxis(object):
 			self.calibrations[channel].setOne()
 
 	def save(self):
-		""" Saves calibrations. Load is handled automatically on creation. """
+		""" Saves calibration on all channels. Load is handled automatically on 
+		creation. """
+		
 		for cal in self.calibrations:
 			cal.save()

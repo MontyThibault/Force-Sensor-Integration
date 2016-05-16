@@ -11,11 +11,13 @@ import os
 from ctypes import *
 
 import ForcePlates
+import LabPro
 import PAIO
 import SixAxis
 import Calibration
 
 reload(ForcePlates)
+reload(LabPro)
 reload(PAIO)
 reload(SixAxis)
 reload(Calibration)
@@ -51,7 +53,7 @@ def init():
 		cmds.createNode( "locator", parent = "center" )
 
 
-	plates = ForcePlates.ForcePlates()
+	plates = LabPro.ForcePlates()
 
 	deviceA000 = PAIO.AIODevice()
 	aio = PAIO.AIO()
@@ -119,6 +121,12 @@ class SensorUpdate(threading.Thread):
 		cmds.button(label = 'Set Torques Zero', 
 			command = callWith(self.rock.setChannelsZero, [3, 4, 5]))
 
+		cmds.button(label = 'Set Forces One', 
+			command = callWith(self.rock.setChannelsOne, [0, 1, 2]))
+		cmds.button(label = 'Set Torques One', 
+			command = callWith(self.rock.setChannelsOne, [3, 4, 5]))
+
+		cmds.button(label = 'Blink', command = callWith(self.plates.blink))
 		cmds.showWindow()
 
 		# Reopen window when closed (You need the button to kill threads safely)
@@ -131,22 +139,19 @@ class SensorUpdate(threading.Thread):
 			cmds.scriptJob(kill = self.reopen_id, force = True)
 		cmds.deleteUI("ForceSensors")
 
-		self.plates.closeDevice()
+		self.plates.Close()
 		self.rock.save()
 
 		print("Thread killed")
 
 	def update(self):
 
-		# self.plates.getForces()
-		# print(self.plates._forces[0])
 
-		self.rock.updateMeasurements()
-		self.rock.updateTransform()
+		# self.rock.updateMeasurements()
+		# self.rock.updateTransform()
 
-		print(self.rock.forces, self.rock.torques)
 
-		# cmds.move(0, 30.0 * voltage.value, 0, "center")
+		self.plates.updateMeasurements()
 
 
 		# self.modifiers = cmds.getModifiers()
@@ -175,6 +180,8 @@ class SensorUpdate(threading.Thread):
 		# cmds.move(center.x, center.y, center.z, 'center')
 		# cmds.refresh()
 
+		# print('that and this')
+
 		self.available = True
 
 	def updateRequest(self):
@@ -190,7 +197,7 @@ class SensorUpdate(threading.Thread):
 
 			# This should coincide with the number of seconds delay for the
 			# program fed into the LabPro
-			time.sleep(1.0 / 25.0)
+			time.sleep(1.0 / 20.0)
 
 			self.updateRequest()
 
