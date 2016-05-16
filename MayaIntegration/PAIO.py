@@ -52,9 +52,9 @@ class AIO(Singleton):
 	
 
 
-class AIODevice():
-	""" Eliminates "deviceID" syntax from all AIO functions. Note: C function 
-	usage & examples are specified in the Contec help files """
+class AIODevice(object):
+	""" Sensor instance with single device name and device ID (each device has 
+	up to 32 channels). """
 
 	aio = AIO()
 
@@ -78,6 +78,8 @@ class AIODevice():
 		return composite
 
 	def __getattr__(self, key):
+		""" Eliminates "deviceID" syntax from all AIO functions. Note: C function 
+		usage & examples are specified in the Contec help files """
 		return self._callableWithID(getattr(self.aio, key))
 
 
