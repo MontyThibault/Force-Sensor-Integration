@@ -9,6 +9,7 @@ import sys
 import os
 
 from ctypes import *
+import unittest
 
 import LabPro
 import PAIO
@@ -22,7 +23,11 @@ reload(Calibration)
 
 
 def main():
+	maya.utils.executeDeferred(testSuite)
 	maya.utils.executeDeferred(init)
+
+def testSuite():
+	unittest.main()
 
 def init():
 	""" Main entry point """
@@ -53,14 +58,14 @@ def init():
 
 	plates = LabPro.ForcePlates()
 
-	deviceA000 = PAIO.AIODevice()
+	deviceA001 = PAIO.AIODevice(b'AIO001')
 	aio = PAIO.AIO()
 
-	deviceA000.Init()
-	deviceA000.AioSetAiRangeAll(aio.PM1)
+	deviceA001.Init()
+	deviceA001.AioSetAiRangeAll(aio.PM1)
 
 	channels = [6, 7, 8, 9, 10, 11]
-	rock = SixAxis.SixAxis(deviceA000, channels, "rock1")
+	rock = SixAxis.SixAxis(deviceA001, channels, "rock1")
 
 	cmds.createNode("locator", n = "locator%s" % hash(rock), p = rock.transform)
 
@@ -157,7 +162,7 @@ class SensorUpdate(threading.Thread):
 		self.plates.save()
 		self.rock.save()
 
-		cmds.delete(self.rock.transform)
+		del self.rock()
 
 		print("Thread killed")
 

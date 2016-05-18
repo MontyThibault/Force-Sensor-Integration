@@ -1,5 +1,7 @@
 from ctypes import *
 import Calibration as C
+import os
+import unittest
 
 class Singleton(object):
 	"""Ensures only one instance of subtypes exist at a time."""
@@ -16,7 +18,7 @@ class LabProUSB(Singleton):
 	interface is `0 = success`. See `LabProUSB_interface.h for function 
 	descriptions. """
 
-	_raw = cdll.LoadLibrary('C:/Users/Monty/Desktop/forcePlates/LabProUSB_SDK/redist/LabProUSB_lib/win64/LabProUSB.dll')
+	_raw = os.path.realpath(__file__) + "/../LabProUSB_SDK/redist/LabProUSB_lib/win64/LabProUSB.dll"
 
 	# Oddballs
 	def Close(self):
@@ -123,10 +125,16 @@ class ForcePlates(Singleton):
 		""" Sends a program line-by-line to the LabPro. Thre instruction manual has more 
 		information for the specification of such programs. """
 
-		file = open('C:/Users/Monty/Desktop/forcePlates/MayaIntegration/programs/simple_program.txt', 'r')
+		file = open(os.path.realpath(__file__) + '/programs/simple_program.txt', 'r')
 		for line in file.readlines():
 			self.SendString("s{%s}\n" % line.strip('\n'))
 		file.close()
 
 	def __getattr__(self, key):
 		return getattr(self.labpro, key)
+
+
+
+class Tests(unittest.TestCase):
+	def open_ForcePlates(self):
+		ForcePlates()

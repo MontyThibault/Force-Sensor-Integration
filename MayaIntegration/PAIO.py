@@ -1,4 +1,5 @@
 from ctypes import *
+import unittest
 
 class Singleton(object):
 	"""Ensures only one instance of subtypes exist at a time."""
@@ -81,6 +82,45 @@ class AIODevice(object):
 		""" Eliminates "deviceID" syntax from all AIO functions. Note: C function 
 		usage & examples are specified in the Contec help files """
 		return self._callableWithID(getattr(self.aio, key))
+
+
+class Tests(unittest.TestCase):
+	def paio_singleton_interface(self):
+		x = AIO()
+		x.test = 10
+		y = AIO()
+
+		self.assertEqual(y.test, 10)
+
+	def access_PAIO_functions(self):
+		self.assertIn(hasattr(AIO(), 'AioInit'))
+		self.assertIn(hasattr(AIO(), 'AioGetErrorMessage'))
+
+	def access_PAIO_constants(self):
+		self.assertTrue(hasattr(AIO(), 'PM10'))
+		self.assertTrue(hasattr(AIO(), 'AIOM_CNTM_CARRY_BORROW'))
+
+	def PAIO_error_wrapping(self):
+
+		def alwaysFails():
+			return 10101
+
+		AIO()._raw.bad = alwaysFails
+		self.assertEquals(AIO().bad(), 10101)
+
+		del AIO()._raw.bad
+
+	def PAIO_device_argument_elision(self):
+
+		def noArguments(deviceID):
+			self.assertEqual(deviceID, 123)
+
+		AIO()._raw.noargs
+
+		d = AIODevice('name')
+		d.deviceID = 123
+
+		d.noargs()
 
 
 consts = {

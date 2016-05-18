@@ -1,9 +1,10 @@
 from ctypes import *
 import maya.cmds as cmds
 import Calibration as C
+import unittest
 
 class SixAxis(object):
-	def __init__(self, device, channels, name):
+	def __init__(self, device, channels, name, load = True):
 		""" Maps a single six-axis sensor to a Maya transform 
 		Device: An instance of PAIO.AIODevice()
 		Channels: The channel indicies for the sensor in the following order:
@@ -22,24 +23,24 @@ class SixAxis(object):
 			self.name = 'SixAxis_%s' % hash(self)
 
 		self.transform = cmds.createNode('transform', name = self.name)
-		self.calibrations = [C.Calibration('%s_%s' % (self.name, i)) 
-			for i in range(6)]
+		self.calibration = C.SixAxisCalibrationMatrix(name, load)
 
-		print(self.name)
+		print('Created new SixAxis %s' % self.name)
+
+	def __del__(self):
+		cmds.delete(self.transform)
 
 	@property
 	def forces(self):
 		""" Channels 1 - 3 """
 
-		return [self.calibrations[i].process((self.measurements[i]))
-			for i in range(3)]
+		return self.calibration.process(self.measurements)[:3]
 
 	@property
 	def torques(self):
 		""" Channels 4 - 6 """
 
-		return [self.calibrations[i].process((self.measurements[i]))
-			for i in range(3, 6)]
+		return self.calibration.process(self.measurements)[3:]
 
 	def updateMeasurements(self):
 		""" Update sensor measurements. Wrap this in an executeDeferred(). """
@@ -51,7 +52,7 @@ class SixAxis(object):
 			self.device.AioSingleAiEx(c_short(channel), slot)
 
 		# This will feed the data into the calibration object so that the user 
-		# set calibrations without accessing the data first
+		# can set calibrations without accessing the data first.
 		self.forces
 		self.torques
 
@@ -60,25 +61,51 @@ class SixAxis(object):
 
 		cmds.xform(self.transform, t = self.forces, ro = self.torques)
 
-	def setChannelsZero(self, channels):
-		""" Sets given channels to zero. These are channel indicies, not the 
-		channel numbers themselves. For instance, setting all forces to zero
-		would be `setChannelsZero([0, 1, 2])` """
 
-		for channel in channels:
-			self.calibrations[channel].setZero()
 
-	def setChannelsOne(self, channels):
-		""" Sets given channels to one. These are channel indicies, not the 
-		channel numbers themselves. For instance, setting all forces to one
-		would be `setChannelsOne([0, 1, 2])` """
+	# def setChannelsZero(self, channels):
+	# 	""" Sets given channels to zero. These are channel indicies, not the 
+	# 	channel numbers themselves. For instance, setting all forces to zero
+	# 	would be `setChannelsZero([0, 1, 2])` """
 
-		for channel in channels:
-			self.calibrations[channel].setOne()
+	# 	for channel in channels:
+	# 		self.calibrations[channel].setZero()
 
-	def save(self):
-		""" Saves calibration on all channels. Load is handled automatically on 
-		creation. """
+	# def setChannelsOne(self, channels):
+	# 	""" Sets given channels to one. These are channel indicies, not the 
+	# 	channel numbers themselves. For instance, setting all forces to one
+	# 	would be `setChannelsOne([0, 1, 2])` """
+
+	# 	for channel in channels:
+	# 		self.calibrations[channel].setOne()
+
+
+
+
+class Tests(unittest.TestCase):
+
+	class FauxDevice(object):
+		def Init():
+			pass
+
+		def AioSetAiRangeAll(range):
+			pass
+
+		def AioSingleAiEx(c_channel, slot):
+
+			from random import random
+			slot.contents = c_float(random() + c_channel.value)
+
+
+	def setUp(self):
+
+		self.device = self.FauxDevice()
+		self.channels = [6, 7, 8, 9, 10, 11]
 		
-		for cal in self.calibrations:
-			cal.save()
+
+	def create_and_process_six_axis(self):
+
+		rock = SixAxis(self.device, self.channels, "test", False)
+		rock.updateMeasurements()
+		
+		self.assertEqual(rock.forces, rock.measurements[:3]
