@@ -1,10 +1,9 @@
 .svn
 .vs
-.opensdf
-.sdf
-.*.sw*
+*.opensdf
+*.sdf
+*.*.sw*
 __pycache__
-.pyc
-.intermediate
-.log
-.tlog
+*.pyc
+*.log
+*.tlog
