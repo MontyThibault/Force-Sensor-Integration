@@ -9,7 +9,6 @@ import sys
 import os
 
 from ctypes import *
-import unittest
 
 import LabPro
 import PAIO
@@ -22,14 +21,32 @@ reload(SixAxis)
 reload(Calibration)
 
 
-def main():
-	maya.utils.executeDeferred(testSuite)
-	maya.utils.executeDeferred(init)
-
 def testSuite():
-	unittest.main()
+	print "--------- Running tests -------------"
 
-def init():
+	def runTests(mod):
+		obj = mod.Tests()
+
+		if hasattr(obj, 'setUp'):
+			obj.setUp()
+
+		for key in dir(obj):
+			if key.startswith('test'):
+				print "Running test: %s.%s" % (mod.__name__, key)
+				getattr(obj, key)()
+				print "Test passed.\n"
+
+		if hasattr(obj, 'tearDown'):
+			obj.tearDown()
+
+	runTests(Calibration)
+	runTests(PAIO)
+	runTests(SixAxis)
+
+	print "---------- All tests passed! ---------"
+
+
+def main():
 	""" Main entry point """
 	
 	print("MayaScript loaded at %s!" % time.time())
@@ -62,10 +79,10 @@ def init():
 	aio = PAIO.AIO()
 
 	deviceA001.Init()
-	deviceA001.AioSetAiRangeAll(aio.PM1)
+	deviceA001.AioSetAiRangeAll(aio.PM10)
 
 	channels = [6, 7, 8, 9, 10, 11]
-	rock = SixAxis.SixAxis(deviceA001, channels, "rock1")
+	rock = SixAxis.SixAxis(deviceA001, channels, "M5237")
 
 	cmds.createNode("locator", n = "locator%s" % hash(rock), p = rock.transform)
 
@@ -126,24 +143,24 @@ class SensorUpdate(threading.Thread):
 
 		cmds.text(label='Contec Six-Axis Sensors')
 
-		cmds.rowColumnLayout(numberOfColumns = 2, columnWidth = [(1, 350 / 2), (2, 350 / 2)])
+		# cmds.rowColumnLayout(numberOfColumns = 2, columnWidth = [(1, 350 / 2), (2, 350 / 2)])
 
-		cmds.button(label = 'Set All Forces Zero', 
-			command = callWith(self.rock.setChannelsZero, [0, 1, 2]))
-		cmds.button(label = 'Set All Forces One', 
-			command = callWith(self.rock.setChannelsOne, [0, 1, 2]))
+		# cmds.button(label = 'Set All Forces Zero', 
+		# 	command = callWith(self.rock.setChannelsZero, [0, 1, 2]))
+		# cmds.button(label = 'Set All Forces One', 
+		# 	command = callWith(self.rock.setChannelsOne, [0, 1, 2]))
 
-		cmds.button(label = 'Set All Torques Zero', 
-			command = callWith(self.rock.setChannelsZero, [3, 4, 5]))
-		cmds.button(label = 'Set All Torques One', 
-			command = callWith(self.rock.setChannelsOne, [3, 4, 5]))
+		# cmds.button(label = 'Set All Torques Zero', 
+		# 	command = callWith(self.rock.setChannelsZero, [3, 4, 5]))
+		# cmds.button(label = 'Set All Torques One', 
+		# 	command = callWith(self.rock.setChannelsOne, [3, 4, 5]))
 
-		for i, a in enumerate(['Force', 'Torque']):
-			for j, b in enumerate(['X', 'Y', 'Z']):
-				cmds.button(label = 'Set %s%s Zero' % (a, b), 
-					command = callWith(self.rock.setChannelsZero, [3 * i + j]))
-				cmds.button(label = 'Set %s%s One' % (a, b), 
-					command = callWith(self.rock.setChannelsOne, [3 * i + j]))
+		# for i, a in enumerate(['Force', 'Torque']):
+		# 	for j, b in enumerate(['X', 'Y', 'Z']):
+		# 		cmds.button(label = 'Set %s%s Zero' % (a, b), 
+		# 			command = callWith(self.rock.setChannelsZero, [3 * i + j]))
+		# 		cmds.button(label = 'Set %s%s One' % (a, b), 
+		# 			command = callWith(self.rock.setChannelsOne, [3 * i + j]))
 		
 		cmds.showWindow()
 
@@ -160,9 +177,8 @@ class SensorUpdate(threading.Thread):
 		self.plates.blink()
 		self.plates.Close()
 		self.plates.save()
-		self.rock.save()
 
-		del self.rock()
+		del self.rock
 
 		print("Thread killed")
 
@@ -202,8 +218,6 @@ class SensorUpdate(threading.Thread):
 		cmds.move(center.x, center.y, center.z, 'center')
 		cmds.refresh()
 
-
-
 		self.available = True
 
 	def updateRequest(self):
@@ -218,6 +232,3 @@ class SensorUpdate(threading.Thread):
 		while not self.dead:
 			time.sleep(1.0 / 60.0)
 			self.updateRequest()
-
-if __name__ == '__main__':
-	main()

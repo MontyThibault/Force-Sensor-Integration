@@ -8,3 +8,4 @@ import MayaScript
 reload(MayaScript)
 
 MayaScript.main()
+# MayaScript.testSuite()

@@ -82,7 +82,7 @@ class SixAxis(object):
 
 
 
-class Tests(unittest.TestCase):
+class Tests(object):
 
 	class FauxDevice(object):
 		def Init():
@@ -91,7 +91,7 @@ class Tests(unittest.TestCase):
 		def AioSetAiRangeAll(range):
 			pass
 
-		def AioSingleAiEx(c_channel, slot):
+		def AioSingleAiEx(deviceID, c_channel, slot):
 
 			from random import random
 			slot.contents = c_float(random() + c_channel.value)
@@ -103,9 +103,9 @@ class Tests(unittest.TestCase):
 		self.channels = [6, 7, 8, 9, 10, 11]
 		
 
-	def create_and_process_six_axis(self):
+	def test_create_and_process_six_axis(self):
 
 		rock = SixAxis(self.device, self.channels, "test", False)
 		rock.updateMeasurements()
 		
-		self.assertEqual(rock.forces, rock.measurements[:3]
+		assert rock.forces == rock.measurements[:3]

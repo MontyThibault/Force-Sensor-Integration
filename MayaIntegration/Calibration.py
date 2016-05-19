@@ -72,18 +72,18 @@ class SixAxisCalibrationMatrix(object):
 
 		out_vec = []
 
-		for i in range(6):
+		for row in self.matrix:
+			out_vec.append(0)
 
-			row = self.matrix[i]
-			out_vec[i] = 0
-
-			for j in vec:
-				out_vec[i] += i * j
+			for i, j in zip(row, vec):
+				out_vec[-1] += i * j
 
 		return out_vec
 
 
 	def load(self):
+		assert LoadHelper.exists(self.name), "Error: Attempting to load non-existant SixAxis calibration data: %s" % self.name
+
 		self.matrix = LoadHelper.load(self.name)
 
 	def save(self):
@@ -100,76 +100,64 @@ class LoadHelper(object):
 	data to a dictionary stored in a file somewhere in the system. """
 
 	# Append to Calibration.py's directory
-	calibration_file = os.path.realpath(__file__) + "/calibration/calib.txt"
+	calibration_file = os.path.dirname(os.path.realpath(__file__)) + "/calibration/calib.txt"
 
-	@staticmethod
-	def _getdict():
-		file = open(self.calibration_file, 'rb')
+	@classmethod
+	def _getdict(cls):
+		file = open(cls.calibration_file, 'rb')
 		dictionary = pickle.load(file)
 		file.close()
 
 		return dictionary
 
-	@staticmethod
-	def _savedict(dictionary):
-		file = open(self.calibration_file, 'rb')
-		pickle.dump(file, dictionary)
+	@classmethod
+	def _savedict(cls, dictionary):
+		file = open(cls.calibration_file, 'wb')
+		pickle.dump(dictionary, file)
 		file.close()
 
-	@staticmethod
-	def exists(key):
-		if not key:
-			return False
-
+	@classmethod
+	def exists(cls, key):
+		dictionary = cls._getdict()
 		return key in dictionary
 
-	@staticmethod
-	def load(key):
-		if not self.exists(key):
-			return False
-
-		return self._getdict()[key]
+	@classmethod
+	def load(cls, key):
+		return cls._getdict()[key]
 	
-	@staticmethod
-	def save(key, value):
-		if not self.exists(key)
-			return False
-
-		dictionary = self._getdict()
+	@classmethod
+	def save(cls, key, value):
+		dictionary = cls._getdict()
 		dictionary[key] = value
 
-		self._savedict(dictionary)
+		cls._savedict(dictionary)
 
-	@staticmethod
-	def delete(key):
-		if not self.exists(key)
-			return False
-
-		dictionary = self._getdict()
+	@classmethod
+	def delete(cls, key):
+		dictionary = cls._getdict()
 		dictionary.pop(key, None)
 
-		self._savedict(dictionary)
+		cls._savedict(dictionary)
 
-	@staticmethod
-	def clear():
-		self._savedict({})
+	@classmethod
+	def clear(cls):
+		cls._savedict({})
 
 
 
-class Tests(unittest.TestCase):
-
-	def calibrate_single_number(self):
+class Tests(object):
+	def test_calibrate_single_number(self):
 
 		x = Calibration()
 
-		self.assertEqual(x.process(5), 5)
+		assert x.process(5) == 5
 
 		x.setZero()
 		x.setOne(10)
 
-		self.assertEqual(x.process(15), 2)
+		assert x.process(15) == 2
 
-	def save_single_calibration(self):
+	def test_save_single_calibration(self):
 
 		x = Calibration()
 		x.offset = 10
@@ -179,33 +167,47 @@ class Tests(unittest.TestCase):
 		x.offset = 15
 		x.load()
 
-		self.assertEqual(x.offset, 10)
+		assert x.offset == 10
 
 		x.delete()
 
-	def save_and_delete_new_persistent_entry(self):
+	def test_save_and_delete_new_persistent_entry(self):
 
 		LoadHelper.save('test', hash(self))
-		self.assertEqual(LoadHelper.load('test'), hash(self))
+		assert LoadHelper.load('test') == hash(self)
 
 		LoadHelper.delete('test')
-		self.assertEqual(LoadHelper.exists('test'), False)
+		assert not LoadHelper.exists('test')
 
 
-	def calibrate_matrix_test_and_save(self):
+	def test_calibrate_matrix_test_and_save(self):
 
 		x = SixAxisCalibrationMatrix()
-		self.assertEqual(x.process([1, 2, 3, 4, 5, 6]), [1, 2, 3, 4, 5, 6])
 
-		x[2][3] = 1
-		self.assertEqual(x.process([0, 0, 0, 1, 0, 0]), [0, 0, 1, 0, 0, 0])
+		assert x.process([1, 2, 3, 4, 5, 6]) == [1, 2, 3, 4, 5, 6]
+
+		x.matrix[2][3] = 1
+		assert x.process([0, 0, 0, 1, 0, 0]) == [0, 0, 1, 1, 0, 0]
 
 		x.name = 'test'
 		x.save()
 
-		x[2][3] = 0
+		x.matrix[2][3] = 0
 
 		x.load()
-		self.assertEqual(x.process([0, 0, 0, 1, 0, 0]), [0, 0, 1, 0, 0, 0])
+		assert x.process([0, 0, 0, 1, 0, 0]) == [0, 0, 1, 1, 0, 0]
 
 		x.delete()
+
+	def test_insert_factory_six_axis_calibrations(self):
+		x = SixAxisCalibrationMatrix(name = 'M5237', load = False)
+		x.matrix = [
+			[0.6789, 0.0034, -0.0013, -0.2676, 0.2778, 0.0501],
+			[0.0098, 0.6808, 0.0023, -0.4103, -0.1925, 0.0485],
+			[-0.0040, -0.0045, 0.1643, -0.0228, -0.0171, 0.0114],
+			[-0.0059, -0.0037, -0.0029, 38.7248, 0.0656, -0.0667],
+			[-0.0037, 0.0103, 0.0064, 0.1106, 38.6657, 0.0941],
+			[0.0024, -0.0004, 0.0008, -0.0325, -0.0992, 27.5819]
+		]
+		x.save()
+		SixAxisCalibrationMatrix(name = 'M5237')

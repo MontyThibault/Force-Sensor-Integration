@@ -84,43 +84,45 @@ class AIODevice(object):
 		return self._callableWithID(getattr(self.aio, key))
 
 
-class Tests(unittest.TestCase):
-	def paio_singleton_interface(self):
+class Tests(object):
+	def test_paio_singleton_interface(self):
 		x = AIO()
 		x.test = 10
 		y = AIO()
 
-		self.assertEqual(y.test, 10)
+		assert y.test == 10
 
-	def access_PAIO_functions(self):
-		self.assertIn(hasattr(AIO(), 'AioInit'))
-		self.assertIn(hasattr(AIO(), 'AioGetErrorMessage'))
+	def test_access_PAIO_functions(self):
+		assert hasattr(AIO(), 'AioInit')
+		assert hasattr(AIO(), 'AioGetErrorString')
 
-	def access_PAIO_constants(self):
-		self.assertTrue(hasattr(AIO(), 'PM10'))
-		self.assertTrue(hasattr(AIO(), 'AIOM_CNTM_CARRY_BORROW'))
+	def test_access_PAIO_constants(self):
+		assert hasattr(AIO(), 'PM10')
+		assert hasattr(AIO(), 'AIOM_CNTM_CARRY_BORROW')
 
-	def PAIO_error_wrapping(self):
+	def test_PAIO_error_wrapping(self):
 
 		def alwaysFails():
 			return 10101
 
 		AIO()._raw.bad = alwaysFails
-		self.assertEquals(AIO().bad(), 10101)
+		assert AIO().bad() == 10101
 
 		del AIO()._raw.bad
 
-	def PAIO_device_argument_elision(self):
+	def test_PAIO_device_argument_elision(self):
 
 		def noArguments(deviceID):
-			self.assertEqual(deviceID, 123)
+			assert deviceID == 123
 
-		AIO()._raw.noargs
+		AIO()._raw.noargs = noArguments
 
 		d = AIODevice('name')
 		d.deviceID = 123
 
 		d.noargs()
+
+		del AIO()._raw.noargs
 
 
 consts = {
